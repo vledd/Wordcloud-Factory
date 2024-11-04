@@ -241,6 +241,7 @@ class Ui_MainWindow(object):
         self.font_step_lbl.setObjectName("font_step_lbl")
         self.verticalLayout_11.addWidget(self.font_step_lbl)
         self.font_step_spin = QtWidgets.QSpinBox(parent=self.frame_4)
+        self.font_step_spin.setMinimum(1)
         self.font_step_spin.setMaximum(200)
         self.font_step_spin.setProperty("value", 1)
         self.font_step_spin.setObjectName("font_step_spin")
