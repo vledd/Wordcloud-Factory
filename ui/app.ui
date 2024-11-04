@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>922</width>
-    <height>620</height>
+    <width>1000</width>
+    <height>662</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>910</width>
-    <height>620</height>
+    <height>662</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <widget class="QFrame" name="frame">
+     <widget class="QFrame" name="frame_global">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -36,21 +36,24 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <item>
-             <widget class="QPushButton" name="pushButton_8">
-              <property name="text">
-               <string>Generate Image</string>
-              </property>
-             </widget>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QPushButton" name="generate_btn">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Generate Image</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_10">
-              <property name="text">
-               <string>Generate + Mask</string>
+             <widget class="QPushButton" name="save_btn">
+              <property name="enabled">
+               <bool>false</bool>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_9">
               <property name="text">
                <string>Save Image</string>
               </property>
@@ -59,24 +62,27 @@
            </layout>
           </item>
           <item>
-           <widget class="QScrollArea" name="scrollArea">
+           <widget class="QScrollArea" name="preview_scroll">
             <property name="widgetResizable">
              <bool>true</bool>
             </property>
-            <widget class="QWidget" name="scrollAreaWidgetContents">
+            <widget class="QWidget" name="preview_scroll_contents">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>352</width>
-               <height>487</height>
+               <width>430</width>
+               <height>527</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
               <item row="0" column="0">
-               <widget class="QLabel" name="label">
+               <widget class="QLabel" name="preview_lbl">
                 <property name="text">
                  <string>*Please generate a Wordcloud to see preview*</string>
+                </property>
+                <property name="scaledContents">
+                 <bool>false</bool>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -91,7 +97,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="verticalFrame">
+        <widget class="QFrame" name="frame_settings_1">
          <property name="maximumSize">
           <size>
            <width>250</width>
@@ -103,7 +109,7 @@
            <number>9</number>
           </property>
           <item>
-           <widget class="QFrame" name="frame_3">
+           <widget class="QFrame" name="subframe_settings_1">
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
             </property>
@@ -114,7 +120,7 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout">
                <item>
-                <widget class="QLabel" name="label_2">
+                <widget class="QLabel" name="lbl_json_file">
                  <property name="text">
                   <string>Select a .json file with chat:</string>
                  </property>
@@ -123,10 +129,10 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_3">
                  <item>
-                  <widget class="QLineEdit" name="lineEdit"/>
+                  <widget class="QLineEdit" name="path_json_edit"/>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_2">
+                  <widget class="QPushButton" name="path_json_btn">
                    <property name="maximumSize">
                     <size>
                      <width>30</width>
@@ -141,7 +147,7 @@
                 </layout>
                </item>
                <item>
-                <widget class="QLabel" name="label_3">
+                <widget class="QLabel" name="lbl_stop_file">
                  <property name="text">
                   <string>[OPTIONAL] Select a .txt file with stop keywords:</string>
                  </property>
@@ -153,10 +159,10 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_4">
                  <item>
-                  <widget class="QLineEdit" name="lineEdit_2"/>
+                  <widget class="QLineEdit" name="path_stop_edit"/>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_3">
+                  <widget class="QPushButton" name="path_stop_btn">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -183,7 +189,7 @@
                 </layout>
                </item>
                <item>
-                <widget class="QLabel" name="label_6">
+                <widget class="QLabel" name="lbl_png_file">
                  <property name="text">
                   <string>[OPTIONAL] Select .png mask file:</string>
                  </property>
@@ -192,10 +198,10 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
                  <item>
-                  <widget class="QLineEdit" name="lineEdit_3"/>
+                  <widget class="QLineEdit" name="path_mask_edit"/>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton">
+                  <widget class="QPushButton" name="path_mask_btn">
                    <property name="maximumSize">
                     <size>
                      <width>30</width>
@@ -221,14 +227,14 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
-                <widget class="QLabel" name="label_4">
+                <widget class="QLabel" name="lbl_width">
                  <property name="text">
                   <string>Desired image Width [px]:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox">
+                <widget class="QSpinBox" name="img_width_spin">
                  <property name="minimum">
                   <number>0</number>
                  </property>
@@ -244,14 +250,14 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="label_5">
+                <widget class="QLabel" name="lbl_height">
                  <property name="text">
                   <string>Desired image Height [px]:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_2">
+                <widget class="QSpinBox" name="img_height_spin">
                  <property name="maximum">
                   <number>4000</number>
                  </property>
@@ -278,14 +284,14 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
-                <widget class="QLabel" name="label_7">
+                <widget class="QLabel" name="lbl_max_word">
                  <property name="text">
                   <string>Max. amount of words:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_3">
+                <widget class="QSpinBox" name="max_word_spin">
                  <property name="maximum">
                   <number>1000</number>
                  </property>
@@ -298,38 +304,38 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="label_12">
+                <widget class="QLabel" name="lbl_min_word_len">
                  <property name="text">
                   <string>Min. word length:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_4">
+                <widget class="QSpinBox" name="min_word_len_spin">
                  <property name="value">
                   <number>3</number>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="label_9">
+                <widget class="QLabel" name="lbl_sort_word">
                  <property name="text">
                   <string>Sort words:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="comboBox"/>
+                <widget class="QComboBox" name="sort_combo"/>
                </item>
                <item>
-                <widget class="QLabel" name="label_8">
+                <widget class="QLabel" name="lbl_scaling">
                  <property name="text">
                   <string>Scaling factor:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="doubleSpinBox">
+                <widget class="QDoubleSpinBox" name="scaling_spin">
                  <property name="decimals">
                   <number>1</number>
                  </property>
@@ -369,7 +375,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="verticalFrame_3">
+        <widget class="QFrame" name="frame_settings_2">
          <property name="maximumSize">
           <size>
            <width>250</width>
@@ -389,7 +395,7 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_10">
                <item>
-                <widget class="QLabel" name="label_10">
+                <widget class="QLabel" name="path_font_lbl">
                  <property name="text">
                   <string>[OPTIONAL] Font path:</string>
                  </property>
@@ -398,10 +404,10 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_6">
                  <item>
-                  <widget class="QLineEdit" name="lineEdit_4"/>
+                  <widget class="QLineEdit" name="path_font_edit"/>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_4">
+                  <widget class="QPushButton" name="path_font_btn">
                    <property name="maximumSize">
                     <size>
                      <width>30</width>
@@ -427,24 +433,24 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_11">
                <item>
-                <widget class="QLabel" name="label_13">
+                <widget class="QLabel" name="min_font_size_lbl">
                  <property name="text">
                   <string>Min. font size:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_5"/>
+                <widget class="QSpinBox" name="min_font_size_spin"/>
                </item>
                <item>
-                <widget class="QLabel" name="label_14">
+                <widget class="QLabel" name="max_font_size_lbl">
                  <property name="text">
                   <string>Max. font size (0 - Image height):</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_6">
+                <widget class="QSpinBox" name="max_font_size_spin">
                  <property name="maximum">
                   <number>4000</number>
                  </property>
@@ -454,14 +460,17 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="label_15">
+                <widget class="QLabel" name="font_step_lbl">
                  <property name="text">
                   <string>Font step:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_7">
+                <widget class="QSpinBox" name="font_step_spin">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
                  <property name="maximum">
                   <number>200</number>
                  </property>
@@ -482,14 +491,24 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_12">
                <item>
-                <widget class="QLabel" name="label_16">
+                <widget class="QLabel" name="color_mode_lbl">
                  <property name="text">
                   <string>Color mode:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="comboBox_2"/>
+                <widget class="QComboBox" name="color_mode_combo"/>
+               </item>
+               <item>
+                <widget class="QLabel" name="color_map_lbl">
+                 <property name="text">
+                  <string>Color map:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="color_map_spin"/>
                </item>
                <item>
                 <widget class="QLabel" name="label_17">
@@ -501,20 +520,37 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout">
                  <item>
-                  <widget class="QLineEdit" name="lineEdit_6">
+                  <widget class="QLineEdit" name="bg_color_edit">
                    <property name="text">
                     <string>#000000FF</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_6">
+                  <widget class="QPushButton" name="bg_color_pick_btn">
                    <property name="text">
                     <string>Pick</string>
                    </property>
                   </widget>
                  </item>
                 </layout>
+               </item>
+               <item>
+                <widget class="Line" name="line_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="use_mask_chkbox">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="text">
+                  <string>Use a mask when generating image</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QLabel" name="label_18">
@@ -526,14 +562,14 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_2">
                  <item>
-                  <widget class="QLineEdit" name="lineEdit_7">
+                  <widget class="QLineEdit" name="mask_color_edit">
                    <property name="text">
                     <string>#ABCDEFFF</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_7">
+                  <widget class="QPushButton" name="mask_color_pick_btn">
                    <property name="text">
                     <string>Pick</string>
                    </property>
@@ -542,14 +578,14 @@
                 </layout>
                </item>
                <item>
-                <widget class="QLabel" name="label_19">
+                <widget class="QLabel" name="mask_contour_thick_lbl">
                  <property name="text">
                   <string>Mask contour thickness:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_8"/>
+                <widget class="QSpinBox" name="mask_thick_spin"/>
                </item>
               </layout>
              </item>
@@ -567,7 +603,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QLabel" name="label_11">
+              <widget class="QLabel" name="copyright_lbl">
                <property name="enabled">
                 <bool>false</bool>
                </property>
@@ -595,7 +631,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>922</width>
+     <width>1000</width>
      <height>22</height>
     </rect>
    </property>
