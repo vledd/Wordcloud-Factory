@@ -236,7 +236,7 @@
                <item>
                 <widget class="QSpinBox" name="img_width_spin">
                  <property name="minimum">
-                  <number>0</number>
+                  <number>100</number>
                  </property>
                  <property name="maximum">
                   <number>4000</number>
@@ -258,6 +258,9 @@
                </item>
                <item>
                 <widget class="QSpinBox" name="img_height_spin">
+                 <property name="minimum">
+                  <number>100</number>
+                 </property>
                  <property name="maximum">
                   <number>4000</number>
                  </property>
@@ -292,6 +295,9 @@
                </item>
                <item>
                 <widget class="QSpinBox" name="max_word_spin">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
                  <property name="maximum">
                   <number>1000</number>
                  </property>
@@ -508,7 +514,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="color_map_spin"/>
+                <widget class="QComboBox" name="color_map_combo"/>
                </item>
                <item>
                 <widget class="QLabel" name="label_17">
