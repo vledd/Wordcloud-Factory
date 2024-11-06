@@ -25,6 +25,7 @@ class MainScreenWindow(qtw.QMainWindow):
         super().__init__(*args, **kwargs)
 
         self.json_path = None
+        self.stopwords_path = None
         self.wordcloud_image = None
         self.wordcloud_image_qt = None
 
@@ -38,7 +39,9 @@ class MainScreenWindow(qtw.QMainWindow):
         self.ui.color_map_combo.addItems(list(colormaps))
 
         self.ui.path_json_btn.clicked.connect(self.get_json_path)
+        self.ui.path_stop_btn.clicked.connect(self.get_stopwords_path)
         self.ui.generate_btn.clicked.connect(self.generate_wordcloud)
+        self.ui.save_btn.clicked.connect(self.save_wordcloud)
         self.ui.bg_color_pick_btn.clicked.connect(self.pick_bg_color)
 
     def get_json_path(self):
@@ -62,12 +65,35 @@ class MainScreenWindow(qtw.QMainWindow):
             self.ui.save_btn.setEnabled(True)
             self.ui.statusbar.showMessage("Ready!")
 
+    def get_stopwords_path(self):
+        """
+        Open file dialog to get a path for .txt file with stopwords.
+        :return: None
+        """
+        self.stopwords_path = qtw.QFileDialog.getOpenFileName(self, "Select File", filter="Stop words (*.txt)")[0]
+        if len(self.stopwords_path) == 0:
+            self.ui.path_stop_edit.setText("No valid file provided!")
+            self.ui.statusbar.showMessage("Failed to load stopwords...")
+            self.stopwords_path = None  # This is needed in order to not break logic
+        else:
+            self.ui.path_stop_edit.setText(str(self.stopwords_path))
+            self.ui.statusbar.showMessage("Stopwords load OK")
+
     def generate_wordcloud(self):
         # Load JSON file
         json_file = open(self.json_path, 'r', encoding="utf-8")
         json_read = json_file.read()
         json_data = json.loads(json_read)
         json_file.close()
+
+        # Load Stopwords if path is provided
+        if self.stopwords_path is not None:
+            stopword_file = open(self.stopwords_path, 'r', encoding="utf-8")
+            stopword_read = stopword_file.read().splitlines()
+            stopword_file.close()
+        else:
+            # Otherwise skip
+            stopword_read = None
 
         sort_type: ParserSortWords
         if self.ui.sort_combo.currentText() == "Most Popular":
@@ -84,9 +110,12 @@ class MainScreenWindow(qtw.QMainWindow):
 
         wc = WordCloud(width=int(self.ui.img_width_spin.text()),
                        height=int(self.ui.img_height_spin.text()),
+                       stopwords=stopword_read,
                        background_color=self.hex_color_to_tuple(self.ui.bg_color_edit.text()),
                        max_words=int(self.ui.max_word_spin.text()),
-                       colormap=self.ui.color_map_combo.currentText())
+                       colormap=self.ui.color_map_combo.currentText(),
+                       scale=float(self.ui.scaling_spin.text()),
+                       mode=self.ui.color_mode_combo.currentText(),)
         wc.generate(" ".join(words_list))
         self.wordcloud_image = wc.to_image()  # For future saving purposes
         self.wordcloud_image_qt = ImageQt(self.wordcloud_image)
@@ -99,6 +128,17 @@ class MainScreenWindow(qtw.QMainWindow):
         # Very dirty hack to move Alpha channel at the end of the string
         hexcolor = color.name(qtg.QColor.NameFormat.HexRgb) + color.name(qtg.QColor.NameFormat.HexArgb)[1:3]
         self.ui.bg_color_edit.setText(hexcolor.upper())
+
+    def save_wordcloud(self):
+        if self.wordcloud_image is not None:
+            save_path = qtw.QFileDialog.getSaveFileName(self,
+                                                        "Select directory where to save wordcloud",
+                                                        filter="Wordcloud (*.png)",
+                                                        directory="wordcloud.png")
+            self.wordcloud_image.save(save_path[0])
+        else:
+            self.ui.statusbar.showMessage("Nothing to save!")
+            qtw.QApplication.beep()
 
     @staticmethod
     def hex_color_to_tuple(hex_color: str) -> tuple:
@@ -116,7 +156,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.2")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.3")
 
 widget.show()
 
