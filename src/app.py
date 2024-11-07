@@ -50,8 +50,13 @@ class MainScreenWindow(qtw.QMainWindow):
     def use_mask_clicked(self):
         if self.ui.use_mask_chkbox.isChecked():
             self.ui.use_mask_colors_chk.setEnabled(True)
+            # Disable size controls, they are overridden by mask dimensions
+            self.ui.img_width_spin.setEnabled(False)
+            self.ui.img_height_spin.setEnabled(False)
         else:
             self.ui.use_mask_colors_chk.setEnabled(False)
+            self.ui.img_width_spin.setEnabled(True)
+            self.ui.img_height_spin.setEnabled(True)
 
 
     def get_json_path(self):
@@ -218,7 +223,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.0")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.1")
 
 widget.show()
 
