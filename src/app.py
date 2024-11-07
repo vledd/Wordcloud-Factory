@@ -26,6 +26,7 @@ class MainScreenWindow(qtw.QMainWindow):
 
         self.json_path = None
         self.stopwords_path = None
+        self.mask_path = None
         self.wordcloud_image = None
         self.wordcloud_image_qt = None
 
@@ -40,6 +41,7 @@ class MainScreenWindow(qtw.QMainWindow):
 
         self.ui.path_json_btn.clicked.connect(self.get_json_path)
         self.ui.path_stop_btn.clicked.connect(self.get_stopwords_path)
+        self.ui.path_mask_btn.clicked.connect(self.get_mask_path)
         self.ui.generate_btn.clicked.connect(self.generate_wordcloud)
         self.ui.save_btn.clicked.connect(self.save_wordcloud)
         self.ui.bg_color_pick_btn.clicked.connect(self.pick_bg_color)
@@ -78,6 +80,22 @@ class MainScreenWindow(qtw.QMainWindow):
         else:
             self.ui.path_stop_edit.setText(str(self.stopwords_path))
             self.ui.statusbar.showMessage("Stopwords load OK")
+
+    def get_mask_path(self):
+        """
+        Open file dialog to get a path for image mask.
+        :return: None
+        """
+        self.mask_path = qtw.QFileDialog.getOpenFileName(self,
+                                                        "Select File",
+                                                        filter="Mask files (*.png *.jpg)")[0]
+        if len(self.mask_path) == 0:
+            self.ui.path_mask_edit.setText("No valid file provided!")
+            self.ui.statusbar.showMessage("Failed to load mask...")
+            self.mask_path = None  # This is needed in order to not break logic
+        else:
+            self.ui.path_mask_edit.setText(str(self.mask_path))
+            self.ui.statusbar.showMessage("Mask load OK")
 
     def generate_wordcloud(self):
         # Load JSON file
@@ -135,7 +153,8 @@ class MainScreenWindow(qtw.QMainWindow):
                                                         "Select directory where to save wordcloud",
                                                         filter="Wordcloud (*.png)",
                                                         directory="wordcloud.png")
-            self.wordcloud_image.save(save_path[0])
+            if save_path[0] != '':
+                self.wordcloud_image.save(save_path[0])
         else:
             self.ui.statusbar.showMessage("Nothing to save!")
             qtw.QApplication.beep()
@@ -156,7 +175,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.3")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.4")
 
 widget.show()
 

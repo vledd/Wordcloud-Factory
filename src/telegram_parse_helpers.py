@@ -44,9 +44,16 @@ def parse_json_chat(json_data: dict,
     # Original dictionary is not needed anymore
     del words_stat
 
-    # Pop too short words
-    for idx, word in enumerate(words_list_clean):
+    # TODO STILL SUCKS HARD but a bit better now. Still needs rework.
+    # Evil hack to remove too short words. Prob could be optimized
+    list_words_to_remove: list = []
+    # First create a list with words to remove
+    for word in words_list_clean:
         if len(word[0]) < min_word_size:
-            words_list_clean.pop(idx)
+            list_words_to_remove.append(word)
+
+    # Then remove those words
+    for i in range(0, len(list_words_to_remove)):
+        words_list_clean.remove(list_words_to_remove[i])
 
     return words_list_clean
