@@ -446,7 +446,17 @@
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="min_font_size_spin"/>
+                <widget class="QSpinBox" name="min_font_size_spin">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>4000</number>
+                 </property>
+                 <property name="value">
+                  <number>1</number>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QLabel" name="max_font_size_lbl">
@@ -551,7 +561,7 @@
                <item>
                 <widget class="QCheckBox" name="use_mask_chkbox">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="text">
                   <string>Use a mask when generating image</string>
@@ -559,7 +569,10 @@
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="checkBox">
+                <widget class="QCheckBox" name="use_mask_colors_chk">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ignore &amp;quot;Color Map&amp;quot; parameter and try to use colors from mask image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>

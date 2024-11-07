@@ -3,7 +3,7 @@ import numpy
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from PIL import ImageColor
-from wordcloud import WordCloud, STOPWORDS
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from matplotlib import pyplot as plt
 from matplotlib import colormaps
 
@@ -43,8 +43,16 @@ class MainScreenWindow(qtw.QMainWindow):
         self.ui.path_stop_btn.clicked.connect(self.get_stopwords_path)
         self.ui.path_mask_btn.clicked.connect(self.get_mask_path)
         self.ui.generate_btn.clicked.connect(self.generate_wordcloud)
+        self.ui.use_mask_chkbox.clicked.connect(self.use_mask_clicked)
         self.ui.save_btn.clicked.connect(self.save_wordcloud)
         self.ui.bg_color_pick_btn.clicked.connect(self.pick_bg_color)
+
+    def use_mask_clicked(self):
+        if self.ui.use_mask_chkbox.isChecked():
+            self.ui.use_mask_colors_chk.setEnabled(True)
+        else:
+            self.ui.use_mask_colors_chk.setEnabled(False)
+
 
     def get_json_path(self):
         """
@@ -86,24 +94,30 @@ class MainScreenWindow(qtw.QMainWindow):
         Open file dialog to get a path for image mask.
         :return: None
         """
+        # FIXME I also want PNG but it requires more study bc it immediately crashes rn
         self.mask_path = qtw.QFileDialog.getOpenFileName(self,
                                                         "Select File",
-                                                        filter="Mask files (*.png *.jpg)")[0]
+                                                        filter="Mask files (*.jpg)")[0]
         if len(self.mask_path) == 0:
             self.ui.path_mask_edit.setText("No valid file provided!")
             self.ui.statusbar.showMessage("Failed to load mask...")
             self.mask_path = None  # This is needed in order to not break logic
+            self.ui.use_mask_chkbox.setEnabled(False)
+            self.ui.use_mask_chkbox.setChecked(False)
         else:
             self.ui.path_mask_edit.setText(str(self.mask_path))
             self.ui.statusbar.showMessage("Mask load OK")
+            self.ui.use_mask_chkbox.setEnabled(True)
 
     def generate_wordcloud(self):
+        # -----------------------------------------------------
         # Load JSON file
         json_file = open(self.json_path, 'r', encoding="utf-8")
         json_read = json_file.read()
         json_data = json.loads(json_read)
         json_file.close()
 
+        # -----------------------------------------------------
         # Load Stopwords if path is provided
         if self.stopwords_path is not None:
             stopword_file = open(self.stopwords_path, 'r', encoding="utf-8")
@@ -112,12 +126,31 @@ class MainScreenWindow(qtw.QMainWindow):
         else:
             # Otherwise skip
             stopword_read = None
+        # -----------------------------------------------------
 
+        # -----------------------------------------------------
         sort_type: ParserSortWords
         if self.ui.sort_combo.currentText() == "Most Popular":
             sort_type = ParserSortWords.DESCENDING
         else:
             sort_type = ParserSortWords.ASCENDING
+        # -----------------------------------------------------
+
+        # TODO Revise a bit later
+        mask_numpy = None
+        if self.ui.use_mask_chkbox.isChecked():
+            if self.mask_path is not None:
+                # TODO Taken from Wordcloud Lib exampled. Needs a deeper study
+                mask_data = numpy.array(Image.open(self.mask_path))
+                image_colors = ImageColorGenerator(mask_data)
+                mask_numpy = mask_data.copy()
+                mask_numpy[mask_numpy.sum(axis=2) == 0] = 255  # Wuzz dat??
+
+        # Make NONE if 0 is selected since Wordcloud lib accepts only such logic
+        if int(self.ui.max_font_size_spin.text()) == 0:
+            max_font_size = None
+        else:
+            max_font_size = int(self.ui.max_font_size_spin.text())
 
         # Parse data
         words_list: list[str] = (
@@ -126,6 +159,7 @@ class MainScreenWindow(qtw.QMainWindow):
                                                                sorting=sort_type))
         )
 
+        # FIXME if no words provided in list (for example min_word_len is too big, thing crashes)
         wc = WordCloud(width=int(self.ui.img_width_spin.text()),
                        height=int(self.ui.img_height_spin.text()),
                        stopwords=stopword_read,
@@ -133,11 +167,20 @@ class MainScreenWindow(qtw.QMainWindow):
                        max_words=int(self.ui.max_word_spin.text()),
                        colormap=self.ui.color_map_combo.currentText(),
                        scale=float(self.ui.scaling_spin.text()),
-                       mode=self.ui.color_mode_combo.currentText(),)
+                       mode=self.ui.color_mode_combo.currentText(),
+                       mask=mask_numpy,
+                       min_font_size=int(self.ui.min_font_size_spin.text()),
+                       max_font_size=max_font_size,)
+
         wc.generate(" ".join(words_list))
+
+        # Only recolor when needed
+        if self.ui.use_mask_colors_chk.isChecked():
+            wc.recolor(color_func=image_colors)
+
         self.wordcloud_image = wc.to_image()  # For future saving purposes
         self.wordcloud_image_qt = ImageQt(self.wordcloud_image)
-
+        # Spandau Ballet "Journeys To Glory" album everyone listen who reads this (c) vled & ruslan4ik
         self.ui.preview_lbl.setPixmap(qtg.QPixmap.fromImage(self.wordcloud_image_qt))
 
     def pick_bg_color(self):
@@ -175,7 +218,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.4")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.0")
 
 widget.show()
 
