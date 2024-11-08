@@ -1,5 +1,6 @@
 import json
 import numpy
+import numpy as np
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from PIL import ImageColor
@@ -35,10 +36,16 @@ class MainScreenWindow(qtw.QMainWindow):
 
         self.ui.statusbar.showMessage("Awaiting .json file...")
 
+        # Add items to combos
         self.ui.sort_combo.addItems(("Most Popular", "Least Popular"))
         self.ui.color_mode_combo.addItems(("RGB", "RGBA"))
         self.ui.color_map_combo.addItems(list(colormaps))
+        self.ui.color_to_mask_combo.addItems(("Black + White are masked",
+                                              "Black is masked",
+                                              "White is masked",
+                                              "None are masked"))
 
+        # Connect signals
         self.ui.path_json_btn.clicked.connect(self.get_json_path)
         self.ui.path_stop_btn.clicked.connect(self.get_stopwords_path)
         self.ui.path_mask_btn.clicked.connect(self.get_mask_path)
@@ -50,11 +57,13 @@ class MainScreenWindow(qtw.QMainWindow):
     def use_mask_clicked(self):
         if self.ui.use_mask_chkbox.isChecked():
             self.ui.use_mask_colors_chk.setEnabled(True)
+            self.ui.color_to_mask_combo.setEnabled(True)
             # Disable size controls, they are overridden by mask dimensions
             self.ui.img_width_spin.setEnabled(False)
             self.ui.img_height_spin.setEnabled(False)
         else:
             self.ui.use_mask_colors_chk.setEnabled(False)
+            self.ui.color_to_mask_combo.setEnabled(False)
             self.ui.img_width_spin.setEnabled(True)
             self.ui.img_height_spin.setEnabled(True)
 
@@ -114,6 +123,31 @@ class MainScreenWindow(qtw.QMainWindow):
             self.ui.statusbar.showMessage("Mask load OK")
             self.ui.use_mask_chkbox.setEnabled(True)
 
+    def process_mask_colors(self, mask: numpy.array):
+        choice = self.ui.color_to_mask_combo.currentText()
+        if choice == "Black + White are masked":
+            # By default, Wordcloud library is already masking out (not generating words) on #FFFFFF
+            # Thus we just find all black colors and make it white (for mask)
+            mask_blk_color = np.all(mask == [0, 0, 0], axis=-1)
+            mask[mask_blk_color] = [255, 255, 255]
+        elif choice == "White is masked":
+            # Basically do nothing - White is masked by default in Wordcloud library
+            pass
+        elif choice == "Black is masked":
+            mask_wht_color = np.all(mask == [255, 255, 255], axis=-1)
+            mask_blk_color = np.all(mask == [0, 0, 0], axis=-1)
+            # Let's do an evil hack -- in order to not hack into lib -- we change mask color to 0xFF - 1
+            # Library will ignore it, coloring will be the same
+            mask[mask_wht_color] = [254, 254, 254]
+            # Make blacks as whites to mask out
+            mask[mask_blk_color] = [255, 255, 255]
+        elif choice == "None are masked":
+            # Use evil hack to draw absolutely everything
+            # Very useful when experimenting with different backgrounds!
+            mask_wht_color = np.all(mask == [255, 255, 255], axis=-1)
+            mask[mask_wht_color] = [254, 254, 254]
+        return mask
+
     def generate_wordcloud(self):
         # -----------------------------------------------------
         # Load JSON file
@@ -145,11 +179,14 @@ class MainScreenWindow(qtw.QMainWindow):
         mask_numpy = None
         if self.ui.use_mask_chkbox.isChecked():
             if self.mask_path is not None:
-                # TODO Taken from Wordcloud Lib exampled. Needs a deeper study
                 mask_data = numpy.array(Image.open(self.mask_path))
                 image_colors = ImageColorGenerator(mask_data)
                 mask_numpy = mask_data.copy()
-                mask_numpy[mask_numpy.sum(axis=2) == 0] = 255  # Wuzz dat??
+
+                # Mask out colors stated in combo box
+                mask_numpy = self.process_mask_colors(mask_numpy)
+                # For debug purposes
+                # Image.fromarray(mask_numpy, mode='RGB').show()
 
         # Make NONE if 0 is selected since Wordcloud lib accepts only such logic
         if int(self.ui.max_font_size_spin.text()) == 0:
@@ -189,7 +226,8 @@ class MainScreenWindow(qtw.QMainWindow):
 
         self.wordcloud_image = wc.to_image()  # For future saving purposes
         self.wordcloud_image_qt = ImageQt(self.wordcloud_image)
-        # Spandau Ballet "Journeys To Glory" album everyone listen who reads this (c) vled & ruslan4ik
+        # Spandau Ballet "Journeys To Glory" -->
+        # an album everyone who reads this should undoubtedly listen to RIGHT NOW (c) vled & ruslan4ik & qwysam
         self.ui.preview_lbl.setPixmap(qtg.QPixmap.fromImage(self.wordcloud_image_qt))
 
     def pick_bg_color(self):
@@ -227,7 +265,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.2")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.3")
 
 widget.show()
 

@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>910</width>
-    <height>682</height>
+    <width>985</width>
+    <height>710</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>910</width>
-    <height>682</height>
+    <height>710</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -71,8 +71,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>340</width>
-               <height>547</height>
+               <width>415</width>
+               <height>575</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -299,7 +299,7 @@
                   <number>1</number>
                  </property>
                  <property name="maximum">
-                  <number>1000</number>
+                  <number>4000</number>
                  </property>
                  <property name="singleStep">
                   <number>10</number>
@@ -582,6 +582,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="QComboBox" name="color_to_mask_combo">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QLabel" name="label_18">
                  <property name="text">
                   <string>Mask contour color:</string>
@@ -660,7 +667,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>910</width>
+     <width>985</width>
      <height>22</height>
     </rect>
    </property>
