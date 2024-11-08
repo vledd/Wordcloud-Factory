@@ -164,7 +164,11 @@ class MainScreenWindow(qtw.QMainWindow):
                                                                sorting=sort_type))
         )
 
-        # FIXME if no words provided in list (for example min_word_len is too big, thing crashes)
+        if len(words_list) == 0:
+            self.ui.statusbar.showMessage("All words filtered! Nothing to show...")
+            qtw.QApplication.beep()
+            return
+
         wc = WordCloud(width=int(self.ui.img_width_spin.text()),
                        height=int(self.ui.img_height_spin.text()),
                        stopwords=stopword_read,
@@ -223,7 +227,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.1")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.2")
 
 widget.show()
 
