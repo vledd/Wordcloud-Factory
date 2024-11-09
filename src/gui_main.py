@@ -386,7 +386,7 @@ class Ui_MainWindow(object):
         self.use_mask_colors_chk.setToolTip(_translate("MainWindow", "<html><head/><body><p>Ignore &quot;Color Map&quot; parameter and try to use colors from mask image.</p></body></html>"))
         self.use_mask_colors_chk.setText(_translate("MainWindow", "Use colors from mask"))
         self.label_18.setText(_translate("MainWindow", "Mask contour color:"))
-        self.mask_color_edit.setText(_translate("MainWindow", "#ABCDEFFF"))
+        self.mask_color_edit.setText(_translate("MainWindow", "#000000FF"))
         self.mask_color_pick_btn.setText(_translate("MainWindow", "Pick"))
         self.mask_contour_thick_lbl.setText(_translate("MainWindow", "Mask contour thickness:"))
         self.copyright_lbl.setText(_translate("MainWindow", "(c) vledd 2024"))

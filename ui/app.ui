@@ -600,7 +600,7 @@
                  <item>
                   <widget class="QLineEdit" name="mask_color_edit">
                    <property name="text">
-                    <string>#ABCDEFFF</string>
+                    <string>#000000FF</string>
                    </property>
                   </widget>
                  </item>
@@ -681,6 +681,8 @@
     <property name="title">
      <string>About+Help</string>
     </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionHelp_me"/>
    </widget>
    <addaction name="menuFunny"/>
    <addaction name="menuAbout"/>
@@ -693,6 +695,16 @@
   <action name="actionGet_statistics_as_txt">
    <property name="text">
     <string>Get statistics as .txt</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionHelp_me">
+   <property name="text">
+    <string>Help me</string>
    </property>
   </action>
  </widget>

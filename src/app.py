@@ -53,6 +53,7 @@ class MainScreenWindow(qtw.QMainWindow):
         self.ui.use_mask_chkbox.clicked.connect(self.use_mask_clicked)
         self.ui.save_btn.clicked.connect(self.save_wordcloud)
         self.ui.bg_color_pick_btn.clicked.connect(self.pick_bg_color)
+        self.ui.mask_color_pick_btn.clicked.connect(self.pick_mask_color)
 
     def use_mask_clicked(self):
         if self.ui.use_mask_chkbox.isChecked():
@@ -216,7 +217,11 @@ class MainScreenWindow(qtw.QMainWindow):
                        mode=self.ui.color_mode_combo.currentText(),
                        mask=mask_numpy,
                        min_font_size=int(self.ui.min_font_size_spin.text()),
-                       max_font_size=max_font_size,)
+                       max_font_size=max_font_size,
+                       font_step=int(self.ui.font_step_spin.text()),
+                       contour_color=self.hex_color_to_tuple(self.ui.mask_color_edit.text()),
+                       contour_width=int(self.ui.mask_thick_spin.text()),
+                       )
 
         wc.generate(" ".join(words_list))
 
@@ -236,6 +241,13 @@ class MainScreenWindow(qtw.QMainWindow):
         # Very dirty hack to move Alpha channel at the end of the string
         hexcolor = color.name(qtg.QColor.NameFormat.HexRgb) + color.name(qtg.QColor.NameFormat.HexArgb)[1:3]
         self.ui.bg_color_edit.setText(hexcolor.upper())
+
+    def pick_mask_color(self):
+        # TODO ShowAlphaChannel could vary regarding on which mode is selected in combo. For now always on
+        color = qtw.QColorDialog.getColor(options=qtw.QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        # Very dirty hack to move Alpha channel at the end of the string
+        hexcolor = color.name(qtg.QColor.NameFormat.HexRgb) + color.name(qtg.QColor.NameFormat.HexArgb)[1:3]
+        self.ui.mask_color_edit.setText(hexcolor.upper())
 
     def save_wordcloud(self):
         if self.wordcloud_image is not None:
@@ -265,7 +277,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.3")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.5.4")
 
 widget.show()
 
