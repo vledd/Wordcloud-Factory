@@ -13,9 +13,9 @@ from constants import ParserSortWords
 
 from gui_main import Ui_MainWindow
 
-from PyQt6 import QtCore as qtc
-from PyQt6 import QtGui as qtg
-from PyQt6 import QtWidgets as qtw
+from PySide6 import QtCore as qtc
+from PySide6 import QtGui as qtg
+from PySide6 import QtWidgets as qtw
 
 import time
 
