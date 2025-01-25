@@ -375,7 +375,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.6.0")
+widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.6.0-rc1")
 
 widget.show()
 
