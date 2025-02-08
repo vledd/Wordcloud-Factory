@@ -226,7 +226,7 @@ class MainScreenWindow(qtw.QMainWindow):
                        background_color=self.hex_color_to_tuple(self.ui.bg_color_edit.text()),
                        max_words=int(self.ui.max_word_spin.text()),
                        colormap=self.ui.color_map_combo.currentText(),
-                       scale=float(self.ui.scaling_spin.text()),
+                       scale=float(self.ui.scaling_spin.text().replace(',', '.')),
                        mode=self.ui.color_mode_combo.currentText(),
                        mask=mask_numpy,
                        min_font_size=int(self.ui.min_font_size_spin.text()),
@@ -375,7 +375,7 @@ class MainScreenWindow(qtw.QMainWindow):
 app = qtw.QApplication([])
 app.setStyle("Fusion")
 widget = MainScreenWindow()
-widget.setWindowTitle("Telegram Wordcloud PyQt6 v0.6.0-rc1")
+widget.setWindowTitle("Telegram Wordcloud PySide6 v0.6.0-rc2")
 
 widget.show()
 
