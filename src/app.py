@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from matplotlib import colormaps
 import multiprocessing as mp
 import threading as th
+import subprocess
 
 import telegram_parse_helpers as parsehelp
 from constants import ParserSortWords
@@ -62,7 +63,8 @@ def main_worker(file_lists, config, progress_queue):
     print("Started main worker!")
     # print(file_lists)
     # print(config)
-    with mp.Pool(processes=20) as pool:
+    # print([(job, config, progress_queue) for sublist in file_lists for job in sublist])
+    with mp.Pool(processes=mp.cpu_count() - 1) as pool:
         pool.starmap(frame_worker, [(job, config, progress_queue) for sublist in file_lists for job in sublist])
 
     progress_queue.put(2)  # Signal process thread to close (all done)
@@ -302,7 +304,8 @@ if __name__ == "__main__":
             self.wordcloud_image = wc.to_image()  # For future saving purposes
             self.wordcloud_image_qt = ImageQt(self.wordcloud_image)
             # Spandau Ballet "Journeys To Glory" -->
-            # an album everyone who reads this should undoubtedly listen to RIGHT NOW (c) vled & ruslan4ik & qwysam
+            # an album everyone who reads this should undoubtedly listen to RIGHT NOW (c)
+            # (c) vled & ruslan4ik & qwysam & chappyxd
             self.ui.preview_lbl.setPixmap(qtg.QPixmap.fromImage(self.wordcloud_image_qt))
 
         @staticmethod
@@ -368,9 +371,10 @@ if __name__ == "__main__":
                 qtw.QApplication.beep()
                 return
 
-            self.jobs_list_split = list(self.split_list_to_jobs(self.mask_path, 20))
+            # Split jobs to a nproc - 1 count so have one core do other stuff and not stutter your PC
+            self.jobs_list_split = list(self.split_list_to_jobs(self.mask_path, mp.cpu_count() - 1))
 
-            # Manager
+            # Manager for storing config between the processes
             self.manager = mp.Manager()
 
             self.cfg_dict = self.manager.dict({
