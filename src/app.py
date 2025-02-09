@@ -397,6 +397,8 @@ if __name__ == "__main__":
             # Queue for progress updates
             self.progress_queue = self.manager.Queue()
 
+            # Reset + resize progress bar
+            self.ui.progressBar.setValue(0)
             self.ui.progressBar.setMaximum(len(self.mask_path))
 
             # Thread for maintaining the progress bar
