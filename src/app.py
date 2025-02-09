@@ -63,10 +63,13 @@ def main_worker(file_lists, config, progress_queue):
     print("Started main worker!")
     # print(file_lists)
     # print(config)
-    # print([(job, config, progress_queue) for sublist in file_lists for job in sublist])
-    with mp.Pool(processes=mp.cpu_count() - 1) as pool:
-        pool.starmap(frame_worker, [(job, config, progress_queue) for sublist in file_lists for job in sublist])
+    # print([(sublist, config, progress_queue) for sublist in file_lists])
+    # Performance tesitng
+    # bench_sta = time.time()
 
+    with mp.Pool(processes=mp.cpu_count() - 1) as pool:
+        pool.starmap(frame_worker, [(job, config, progress_queue) for job in file_lists])
+    # print("Time taken: ", time.time() - bench_sta)
     progress_queue.put(2)  # Signal process thread to close (all done)
 
 
@@ -108,7 +111,6 @@ if __name__ == "__main__":
             self.cfg_dict = None
             self.progress_queue = None
             self.worker_process = None
-            self.jobs_list_split = None
             self.observing_thread = None
 
             # Main path + misc.
@@ -371,9 +373,6 @@ if __name__ == "__main__":
                 qtw.QApplication.beep()
                 return
 
-            # Split jobs to a nproc - 1 count so have one core do other stuff and not stutter your PC
-            self.jobs_list_split = list(self.split_list_to_jobs(self.mask_path, mp.cpu_count() - 1))
-
             # Manager for storing config between the processes
             self.manager = mp.Manager()
 
@@ -407,7 +406,7 @@ if __name__ == "__main__":
 
             # Start main worker process (brigadier)
             self.worker_process = mp.Process(target=main_worker,
-                                             args=(self.jobs_list_split,
+                                             args=(self.mask_path,
                                                    self.cfg_dict,
                                                    self.progress_queue))
             self.worker_process.start()
