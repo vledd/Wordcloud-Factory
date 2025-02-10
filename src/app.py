@@ -1,4 +1,6 @@
 import json
+import os
+import random
 import sys
 
 import numpy
@@ -27,7 +29,7 @@ import time
 
 def frame_worker(filename, config, progress_queue):
     print(f"Worker {mp.current_process().pid} is processing {filename}")
-
+    # TODO allow skipped frames due to incorrect mask. At the end show skipped frames amount!
     mask_data = numpy.array(Image.open(filename))
     image_colors = ImageColorGenerator(mask_data)
     mask_numpy = mask_data.copy()
@@ -54,7 +56,8 @@ def frame_worker(filename, config, progress_queue):
         wc.recolor(color_func=image_colors)
 
     img = wc.to_image()
-    img.save(f"../export/{filename[filename.rfind('/') + 1 ::]}")
+    # FIXME It is temporary, I will fix it later. Want to make it more flexible
+    img.save(os.path.join(config["save_dir"], f"{filename[filename.rfind('/') + 1 ::]}"))
 
     progress_queue.put(1)  # Notify progress
 
@@ -112,6 +115,8 @@ if __name__ == "__main__":
             self.progress_queue = None
             self.worker_process = None
             self.observing_thread = None
+            self.frames_save_path = None
+            self.movie = None  # Hehe m00viez
 
             # Main path + misc.
             self.json_path = None
@@ -138,8 +143,8 @@ if __name__ == "__main__":
             self.ui.path_json_btn.clicked.connect(self.get_json_path)
             self.ui.path_stop_btn.clicked.connect(self.get_stopwords_path)
             self.ui.path_mask_btn.clicked.connect(self.get_mask_path)
-            self.ui.generate_btn.clicked.connect(self.generate_wordcloud)
-            self.ui.generate_vid_btn.clicked.connect(self.generate_video)
+            self.ui.generate_btn.clicked.connect(lambda: self.generate_wordcloud(False))
+            self.ui.generate_vid_btn.clicked.connect(lambda: self.generate_wordcloud(True))
             self.ui.use_mask_chkbox.clicked.connect(self.use_mask_clicked)
             self.ui.save_btn.clicked.connect(self.save_wordcloud)
             self.ui.bg_color_pick_btn.clicked.connect(self.pick_bg_color)
@@ -223,7 +228,7 @@ if __name__ == "__main__":
                 if self.ui.generate_btn.isEnabled():
                     self.ui.generate_vid_btn.setEnabled(True)
 
-        def generate_wordcloud(self):
+        def generate_wordcloud(self, is_video: bool):
             # -----------------------------------------------------
             # Load JSON file
             json_file = open(self.json_path, 'r', encoding="utf-8")
@@ -250,19 +255,6 @@ if __name__ == "__main__":
                 sort_type = ParserSortWords.ASCENDING
             # -----------------------------------------------------
 
-            # TODO Revise a bit later
-            mask_numpy = None
-            if self.ui.use_mask_chkbox.isChecked():
-                if self.mask_path is not None:
-                    mask_data = numpy.array(Image.open(self.mask_path[0]))
-                    image_colors = ImageColorGenerator(mask_data)
-                    mask_numpy = mask_data.copy()
-
-                    # Mask out colors stated in combo box
-                    mask_numpy = process_mask_colors(self.ui.color_to_mask_combo.currentText(), mask_numpy)
-                    # For debug purposes
-                    # Image.fromarray(mask_numpy, mode='RGB').show()
-
             # Make NONE if 0 is selected since Wordcloud lib accepts only such logic
             if int(self.ui.max_font_size_spin.text()) == 0:
                 max_font_size = None
@@ -281,34 +273,106 @@ if __name__ == "__main__":
                 qtw.QApplication.beep()
                 return
 
-            wc = WordCloud(width=int(self.ui.img_width_spin.text()),
-                           height=int(self.ui.img_height_spin.text()),
-                           stopwords=stopword_read,
-                           background_color=self.hex_color_to_tuple(self.ui.bg_color_edit.text()),
-                           max_words=int(self.ui.max_word_spin.text()),
-                           colormap=self.ui.color_map_combo.currentText(),
-                           scale=float(self.ui.scaling_spin.text().replace(',', '.')),
-                           mode=self.ui.color_mode_combo.currentText(),
-                           mask=mask_numpy,
-                           min_font_size=int(self.ui.min_font_size_spin.text()),
-                           max_font_size=max_font_size,
-                           font_step=int(self.ui.font_step_spin.text()),
-                           contour_color=self.hex_color_to_tuple(self.ui.mask_color_edit.text()),
-                           contour_width=int(self.ui.mask_thick_spin.text()),
-                           )
+            # If not a video, just process a single frame
+            if not is_video:
+                # TODO Revise a bit later
+                mask_numpy = None
+                if self.ui.use_mask_chkbox.isChecked():
+                    if self.mask_path is not None:
+                        mask_data = numpy.array(Image.open(self.mask_path[0]))
+                        image_colors = ImageColorGenerator(mask_data)
+                        mask_numpy = mask_data.copy()
 
-            wc.generate(" ".join(words_list))
+                        # Mask out colors stated in combo box
+                        mask_numpy = process_mask_colors(self.ui.color_to_mask_combo.currentText(), mask_numpy)
+                        # For debug purposes
+                        # Image.fromarray(mask_numpy, mode='RGB').show()
 
-            # Only recolor when needed
-            if self.ui.use_mask_colors_chk.isChecked():
-                wc.recolor(color_func=image_colors)
+                wc = WordCloud(width=int(self.ui.img_width_spin.text()),
+                               height=int(self.ui.img_height_spin.text()),
+                               stopwords=stopword_read,
+                               background_color=self.hex_color_to_tuple(self.ui.bg_color_edit.text()),
+                               max_words=int(self.ui.max_word_spin.text()),
+                               colormap=self.ui.color_map_combo.currentText(),
+                               scale=float(self.ui.scaling_spin.text().replace(',', '.')),
+                               mode=self.ui.color_mode_combo.currentText(),
+                               mask=mask_numpy,
+                               min_font_size=int(self.ui.min_font_size_spin.text()),
+                               max_font_size=max_font_size,
+                               font_step=int(self.ui.font_step_spin.text()),
+                               contour_color=self.hex_color_to_tuple(self.ui.mask_color_edit.text()),
+                               contour_width=int(self.ui.mask_thick_spin.text()),
+                               )
 
-            self.wordcloud_image = wc.to_image()  # For future saving purposes
-            self.wordcloud_image_qt = ImageQt(self.wordcloud_image)
-            # Spandau Ballet "Journeys To Glory" -->
-            # an album everyone who reads this should undoubtedly listen to RIGHT NOW (c)
-            # (c) vled & ruslan4ik & qwysam & chappyxd
-            self.ui.preview_lbl.setPixmap(qtg.QPixmap.fromImage(self.wordcloud_image_qt))
+                wc.generate(" ".join(words_list))
+
+                # Only recolor when needed
+                if self.ui.use_mask_colors_chk.isChecked():
+                    wc.recolor(color_func=image_colors)
+
+                self.wordcloud_image = wc.to_image()  # For future saving purposes
+                self.wordcloud_image_qt = ImageQt(self.wordcloud_image)
+                # Spandau Ballet "Journeys To Glory" -->
+                # an album everyone who reads this should undoubtedly listen to RIGHT NOW (c)
+                # (c) vled & ruslan4ik & qwysam & chappyxd
+                self.ui.preview_lbl.setPixmap(qtg.QPixmap.fromImage(self.wordcloud_image_qt))
+
+            else:  # Else process as a video
+                self.frames_save_path = qtw.QFileDialog.getExistingDirectory(self,
+                                                                 "Select directory to store video frames")
+                if self.frames_save_path == '':
+                    self.ui.statusbar.showMessage("Select correct directory!")
+                    qtw.QApplication.beep()
+                    return
+
+
+                # Manager for storing config between the processes (wordcloud parameters)
+                self.manager = mp.Manager()
+
+                self.cfg_dict = self.manager.dict({
+                    "stopwords": stopword_read,
+                    "bg_color": self.hex_color_to_tuple(self.ui.bg_color_edit.text()),
+                    "max_words": int(self.ui.max_word_spin.text()),
+                    "colormap": self.ui.color_map_combo.currentText(),
+                    "scale": float(self.ui.scaling_spin.text().replace(',', '.')),
+                    "mode": self.ui.color_mode_combo.currentText(),
+                    "min_font_size": int(self.ui.min_font_size_spin.text()),
+                    "max_font_size": max_font_size,
+                    "font_step": int(self.ui.font_step_spin.text()),
+                    "contour_color": self.hex_color_to_tuple(self.ui.mask_color_edit.text()),
+                    "contour_width": int(self.ui.mask_thick_spin.text()),
+                    "masking_strategy": self.ui.color_to_mask_combo.currentText(),
+                    "need_recolor": self.ui.use_mask_colors_chk.isChecked(),
+                    "save_dir": self.frames_save_path,
+                    # TBH this is probably not a very good idea, let's still leave it here for now TODO
+                    "words_list": words_list,
+                })
+
+                # Queue for progress updates
+                self.progress_queue = self.manager.Queue()
+
+                # Reset + resize progress bar
+                self.ui.progressBar.setValue(0)
+                self.ui.progressBar.setMaximum(len(self.mask_path))
+                self.ui.statusbar.showMessage("Let's hope for the best! Processing...")
+
+                self.movie = qtg.QMovie(os.path.join("../spinners/", random.choice(os.listdir("../spinners/"))))
+                self.movie.setScaledSize(qtc.QSize(256, 256))
+                self.ui.preview_lbl.setMovie(self.movie)
+                self.movie.start()
+
+                # Thread for maintaining the progress bar
+                self.observing_thread = th.Thread(target=self.progress_listener,
+                                                  args=(self.progress_queue,))
+                self.observing_thread.start()
+
+                # Start main worker process (brigadier)
+                self.worker_process = mp.Process(target=main_worker,
+                                                 args=(self.mask_path,
+                                                       self.cfg_dict,
+                                                       self.progress_queue))
+                self.worker_process.start()
+
 
         @staticmethod
         def split_list_to_jobs(jobs_list: list[str], jobs_num: int):
@@ -320,98 +384,15 @@ if __name__ == "__main__":
             while True:
                 ret: int = progress_queue.get()
                 if ret == 2:
+                    # Stop the fun :(
+                    self.movie.stop()
+                    self.ui.preview_lbl.setText(u"*Please generate a Wordcloud to see preview*")
+                    self.ui.statusbar.showMessage("Done!")
                     break
                 # print("++Progress")
                 self.ui.progressBar.setValue(self.ui.progressBar.value() + 1)
             sys.exit(0)  # Properly close the thread
 
-
-        # FIXME yeah duplications should be removed but need to discuss how to correctly
-        # wrap everything in "if`s" and for loops. Let it be a separate func for now (4ever lol)
-        def generate_video(self):
-            # -----------------------------------------------------
-            # Load JSON file
-            json_file = open(self.json_path, 'r', encoding="utf-8")
-            json_read = json_file.read()
-            json_data = json.loads(json_read)
-            json_file.close()
-
-            # -----------------------------------------------------
-            # Load Stopwords if path is provided
-            if self.stopwords_path is not None:
-                stopword_file = open(self.stopwords_path, 'r', encoding="utf-8")
-                stopword_read = stopword_file.read().splitlines()
-                stopword_file.close()
-            else:
-                # Otherwise skip
-                stopword_read = None
-            # -----------------------------------------------------
-
-            # -----------------------------------------------------
-            sort_type: ParserSortWords
-            if self.ui.sort_combo.currentText() == "Most Popular":
-                sort_type = ParserSortWords.DESCENDING
-            else:
-                sort_type = ParserSortWords.ASCENDING
-            # -----------------------------------------------------
-
-            # Make NONE if 0 is selected since Wordcloud lib accepts only such logic
-            if int(self.ui.max_font_size_spin.text()) == 0:
-                max_font_size = None
-            else:
-                max_font_size = int(self.ui.max_font_size_spin.text())
-
-            # Parse data
-            words_list: list[str] = (
-                list(word[0] for word in parsehelp.parse_json_chat(json_data,
-                                                                   min_word_size=int(self.ui.min_word_len_spin.text()),
-                                                                   sorting=sort_type))
-            )
-
-            if len(words_list) == 0:
-                self.ui.statusbar.showMessage("All words filtered! Nothing to show...")
-                qtw.QApplication.beep()
-                return
-
-            # Manager for storing config between the processes
-            self.manager = mp.Manager()
-
-            self.cfg_dict = self.manager.dict({
-                "stopwords": stopword_read,
-                "bg_color": self.hex_color_to_tuple(self.ui.bg_color_edit.text()),
-                "max_words": int(self.ui.max_word_spin.text()),
-                "colormap": self.ui.color_map_combo.currentText(),
-                "scale": float(self.ui.scaling_spin.text().replace(',', '.')),
-                "mode": self.ui.color_mode_combo.currentText(),
-                "min_font_size": int(self.ui.min_font_size_spin.text()),
-                "max_font_size": max_font_size,
-                "font_step": int(self.ui.font_step_spin.text()),
-                "contour_color": self.hex_color_to_tuple(self.ui.mask_color_edit.text()),
-                "contour_width": int(self.ui.mask_thick_spin.text()),
-                "masking_strategy": self.ui.color_to_mask_combo.currentText(),
-                "need_recolor": self.ui.use_mask_colors_chk.isChecked(),
-                # TBH this is probably not a very good idea, let's still leave it here for now TODO
-                "words_list": words_list,
-            })
-
-            # Queue for progress updates
-            self.progress_queue = self.manager.Queue()
-
-            # Reset + resize progress bar
-            self.ui.progressBar.setValue(0)
-            self.ui.progressBar.setMaximum(len(self.mask_path))
-
-            # Thread for maintaining the progress bar
-            self.observing_thread = th.Thread(target=self.progress_listener,
-                                              args=(self.progress_queue,))
-            self.observing_thread.start()
-
-            # Start main worker process (brigadier)
-            self.worker_process = mp.Process(target=main_worker,
-                                             args=(self.mask_path,
-                                                   self.cfg_dict,
-                                                   self.progress_queue))
-            self.worker_process.start()
 
         def pick_bg_color(self):
             # TODO ShowAlphaChannel could vary regarding on which mode is selected in combo. For now always on
@@ -431,8 +412,7 @@ if __name__ == "__main__":
             if self.wordcloud_image is not None:
                 save_path = qtw.QFileDialog.getSaveFileName(self,
                                                             "Select directory where to save wordcloud",
-                                                            filter="Wordcloud (*.png)",
-                                                            directory="wordcloud.png")
+                                                            filter="Wordcloud (*.png)")
                 if save_path[0] != '':
                     self.wordcloud_image.save(save_path[0])
             else:
@@ -454,7 +434,7 @@ if __name__ == "__main__":
     app = qtw.QApplication([])
     app.setStyle("Fusion")
     widget = MainScreenWindow()
-    widget.setWindowTitle("Telegram Wordcloud PySide6 v0.6.0-rc3")
+    widget.setWindowTitle("Telegram Wordcloud PySide6 v0.6.0")
 
     widget.show()
 
