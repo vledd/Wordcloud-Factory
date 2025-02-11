@@ -95,7 +95,7 @@
                <x>0</x>
                <y>0</y>
                <width>422</width>
-               <height>543</height>
+               <height>560</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
@@ -145,7 +145,7 @@
                <item>
                 <widget class="QLabel" name="lbl_json_file">
                  <property name="text">
-                  <string>Select a .json file with chat:</string>
+                  <string>Select a text file with words:</string>
                  </property>
                 </widget>
                </item>
@@ -697,7 +697,7 @@
      <x>0</x>
      <y>0</y>
      <width>992</width>
-     <height>33</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFunny">
