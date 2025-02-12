@@ -15,8 +15,9 @@ import multiprocessing as mp
 import threading as th
 import subprocess
 
-import telegram_parse_helpers as parsehelp
+import text_parse_helpers as parsehelp
 from constants import ParserSortWords
+from constants import FileParsingMode
 
 from gui_main import Ui_MainWindow
 from gui_modal_file_open import Ui_dialog_open_file
@@ -26,8 +27,6 @@ from PySide6 import QtGui as qtg
 from PySide6 import QtWidgets as qtw
 
 import time
-
-from src.constants import FileParsingMode
 
 
 def frame_worker(filename, config, progress_queue):
@@ -155,7 +154,6 @@ if __name__ == "__main__":
                                                              "Select File",
                                                              filter=f"{self.ui.cmb_sel_type.currentText()}")[0]
             self.close()
-            
 
 
     # Window with the main software functionality
@@ -283,7 +281,7 @@ if __name__ == "__main__":
             self.mask_path = qtw.QFileDialog.getOpenFileNames(self,
                                                             "Select File",
                                                              filter="Mask files (*.jpg);;"
-                                                                    "Video files (*.mp4)")[0]
+                                                                    "[NOT IMPLEMENTED] Video files (*.mp4)")[0]
             if len(self.mask_path) == 0:
                 self.ui.path_mask_edit.setText("No valid file provided!")
                 self.ui.statusbar.showMessage("Failed to load mask...")
@@ -315,13 +313,6 @@ if __name__ == "__main__":
 
         def generate_wordcloud(self, is_video: bool):
             # -----------------------------------------------------
-            # Load JSON file
-            json_file = open(self.json_path, 'r', encoding="utf-8")
-            json_read = json_file.read()
-            json_data = json.loads(json_read)
-            json_file.close()
-
-            # -----------------------------------------------------
             # Load Stopwords if path is provided
             if self.stopwords_path is not None:
                 stopword_file = open(self.stopwords_path, 'r', encoding="utf-8")
@@ -346,12 +337,24 @@ if __name__ == "__main__":
             else:
                 self.max_font_size = int(self.ui.max_font_size_spin.text())
 
-            # Parse data
-            self.words_list: list[str] = (
-                list(word[0] for word in parsehelp.parse_json_chat(json_data,
-                                                                   min_word_size=int(self.ui.min_word_len_spin.text()),
-                                                                   sorting=sort_type))
-            )
+            # Parse data depending on the mode
+            if self.window_modal_open_file.parsing_mode == FileParsingMode.JSON:
+                # Load JSON file
+                json_file = open(self.json_path, 'r', encoding="utf-8")
+                json_read = json_file.read()
+                json_data = json.loads(json_read)
+                json_file.close()
+
+                # Parse words using specialized parser function
+                self.words_list: list[str] = (
+                    list(word[0] for word in parsehelp.parse_json_chat(json_data,
+                                                                    min_word_size=int(self.ui.min_word_len_spin.text()),
+                                                                    sorting=sort_type))
+                )
+            elif self.window_modal_open_file.parsing_mode == FileParsingMode.PLAIN_TXT:
+                self.ui.statusbar.showMessage("Not implemented yet")
+                qtw.QApplication.beep()
+                return
 
             if len(self.words_list) == 0:
                 self.ui.statusbar.showMessage("All words filtered! Nothing to show...")
@@ -507,7 +510,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0-rc1")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0-rc2")
     window.show()
 
     app.exec()

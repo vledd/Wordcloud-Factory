@@ -57,3 +57,9 @@ def parse_json_chat(json_data: dict,
         words_list_clean.remove(list_words_to_remove[i])
 
     return words_list_clean
+
+def parse_plain_text(plain_text: str,
+                     min_word_size: int,
+                     sorting: ParserSortWords = ParserSortWords.DESCENDING) -> list[tuple[str, int]]:
+    pass
+
