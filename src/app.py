@@ -71,9 +71,15 @@ def main_worker(file_lists, config, progress_queue):
     # print([(sublist, config, progress_queue) for sublist in file_lists])
     # Performance tesitng
     # bench_sta = time.time()
-
-    with mp.Pool(processes=mp.cpu_count() - 1) as pool:
-        pool.starmap(frame_worker, [(job, config, progress_queue) for job in file_lists])
+    # TODO would be also nice to have STOP GENERATING functionality. Need to think about it
+    try:
+        with mp.Pool(processes=mp.cpu_count() - 1) as pool:
+            pool.starmap(frame_worker, [(job, config, progress_queue) for job in file_lists])
+    except ValueError:  # TODO Skipped frames count should appear somewhere here or inside actual job
+        print("Something went wrong. You will not see this message in future releases")
+        progress_queue.put(2)
+    else:
+        print("What?")
     # print("Time taken: ", time.time() - bench_sta)
     progress_queue.put(2)  # Signal process thread to close (all done)
 
@@ -311,6 +317,12 @@ if __name__ == "__main__":
                 self.ui.preview_lbl.setText("*Please generate a Wordcloud to see preview*")
                 self.ui.statusbar.showMessage("Done!")
 
+                # Enable buttons
+                self.ui.generate_btn.setEnabled(True)
+                self.ui.save_btn.setEnabled(True)
+                self.ui.generate_vid_btn.setEnabled(True)
+
+
         def generate_wordcloud(self, is_video: bool):
             # -----------------------------------------------------
             # Load Stopwords if path is provided
@@ -443,10 +455,16 @@ if __name__ == "__main__":
                 self.ui.progressBar.setMaximum(len(self.mask_path))
                 self.ui.statusbar.showMessage("Let's hope for the best! Processing...")
 
+                # Prepare spinners to display a cute character you can spend time with while waiting for the processing
                 self.movie = qtg.QMovie(os.path.join("../spinners/", random.choice(os.listdir("../spinners/"))))
                 self.movie.setScaledSize(qtc.QSize(256, 256))
                 self.ui.preview_lbl.setMovie(self.movie)
                 self.movie.start()
+
+                # Disable buttons to not mess with a processing
+                self.ui.generate_btn.setEnabled(False)
+                self.ui.save_btn.setEnabled(False)
+                self.ui.generate_vid_btn.setEnabled(False)
 
                 # Thread for maintaining the progress bar and misc.
                 self.observing_thread = ProgressListenerWorker(self.progress_queue)
