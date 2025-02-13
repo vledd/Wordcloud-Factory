@@ -61,5 +61,44 @@ def parse_json_chat(json_data: dict,
 def parse_plain_text(plain_text: str,
                      min_word_size: int,
                      sorting: ParserSortWords = ParserSortWords.DESCENDING) -> list[tuple[str, int]]:
-    pass
 
+    # TODO THIS SHOULD BE FIXED AS WELL AS JSON FUNCTION
+    # I just don't have enough time so I copied JSON function to have at least somehow working PoC
+    # Should be reworked
+
+    words_stat: dict[str, int] = {}
+
+    for word in plain_text.split(" "):
+        # Replace all forbidden characters.
+        # TODO see TODO in FORBIDDEN_CHAR variable. Fix it.
+        for char in FORBIDDEN_CHAR:
+            word = word.replace(char, "")
+        # Create new dict. entry or add frequency to it.
+        if word not in words_stat:
+            words_stat[word] = 1
+        else:
+            words_stat[word] += 1
+
+    # Sort words in DESC or ASC order
+    should_reverse: bool = False
+    if sorting == ParserSortWords.DESCENDING:
+        should_reverse = True
+
+    words_list_clean: list[tuple[str, int]] = sorted(words_stat.items(), key=lambda x: x[1], reverse=should_reverse)
+
+    # Original dictionary is not needed anymore
+    del words_stat
+
+    # TODO STILL SUCKS HARD but a bit better now. Still needs rework.
+    # Evil hack to remove too short words. Prob could be optimized
+    list_words_to_remove: list = []
+    # First create a list with words to remove
+    for word in words_list_clean:
+        if len(word[0]) < min_word_size:
+            list_words_to_remove.append(word)
+
+    # Then remove those words
+    for i in range(0, len(list_words_to_remove)):
+        words_list_clean.remove(list_words_to_remove[i])
+    print(len(words_list_clean))
+    return words_list_clean

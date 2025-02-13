@@ -178,7 +178,7 @@ if __name__ == "__main__":
             self.movie = None  # Hehe m00viez
 
             # Main path + misc.
-            self.json_path = None
+            self.txt_path = None
             self.stopwords_path = None
             self.mask_path = None
             self.wordcloud_image = None
@@ -238,9 +238,9 @@ if __name__ == "__main__":
             """
             # This modal window will block other tasks until closed
             self.window_modal_open_file.exec()
-            self.json_path = self.window_modal_open_file.file_path
+            self.txt_path = self.window_modal_open_file.file_path
 
-            if len(self.json_path) == 0:
+            if len(self.txt_path) == 0:
                 self.ui.path_json_edit.setText("No valid file provided!")
                 self.ui.preview_lbl.setEnabled(False)
                 self.ui.generate_btn.setEnabled(False)
@@ -253,7 +253,7 @@ if __name__ == "__main__":
             # TODO it would be nice to additionally add some validation functionality.
             # At least so it would check for ["message"] fields in JSON.
 
-            self.ui.path_json_edit.setText(str(self.json_path))
+            self.ui.path_json_edit.setText(str(self.txt_path))
             self.ui.preview_lbl.setEnabled(True)
             self.ui.generate_btn.setEnabled(True)
             self.ui.save_btn.setEnabled(True)
@@ -352,21 +352,27 @@ if __name__ == "__main__":
             # Parse data depending on the mode
             if self.window_modal_open_file.parsing_mode == FileParsingMode.JSON:
                 # Load JSON file
-                json_file = open(self.json_path, 'r', encoding="utf-8")
+                json_file = open(self.txt_path, 'r', encoding="utf-8")
                 json_read = json_file.read()
                 json_data = json.loads(json_read)
                 json_file.close()
 
-                # Parse words using specialized parser function
+                # Parse words using specialized parser function for JSON
                 self.words_list: list[str] = (
                     list(word[0] for word in parsehelp.parse_json_chat(json_data,
                                                                     min_word_size=int(self.ui.min_word_len_spin.text()),
                                                                     sorting=sort_type))
                 )
             elif self.window_modal_open_file.parsing_mode == FileParsingMode.PLAIN_TXT:
-                self.ui.statusbar.showMessage("Not implemented yet")
-                qtw.QApplication.beep()
-                return
+                plain_txt_file = open(self.txt_path, 'r', encoding="utf-8")
+                plain_txt_read = plain_txt_file.read()
+                plain_txt_file.close()
+                # Parse words using specialized parser function for plain text
+                self.words_list: list[str] = (
+                    list(word[0] for word in parsehelp.parse_plain_text(plain_txt_read,
+                                                                        min_word_size=int(self.ui.min_word_len_spin.text()),
+                                                                        sorting=sort_type))
+                )
 
             if len(self.words_list) == 0:
                 self.ui.statusbar.showMessage("All words filtered! Nothing to show...")
@@ -528,7 +534,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0-rc2")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0-rc3")
     window.show()
 
     app.exec()
