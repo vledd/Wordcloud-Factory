@@ -534,7 +534,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0-rc3")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0")
     window.show()
 
     app.exec()

@@ -100,5 +100,5 @@ def parse_plain_text(plain_text: str,
     # Then remove those words
     for i in range(0, len(list_words_to_remove)):
         words_list_clean.remove(list_words_to_remove[i])
-    print(len(words_list_clean))
+
     return words_list_clean
