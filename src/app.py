@@ -35,7 +35,7 @@ def frame_worker(filenames_list, config, progress_queue):
     """
     Behavior is changed since v0.7.2 because Windows sucks hard at rapid process creation.
     Previous idea "1 frame -- 1 process" worked fine only for Linux with its godlike fork().
-    Win users must still struggle (ca. 2 - 2.5x slower than Linux).
+    Win users must still struggle (ca. 2x slower than Linux).
     """
 
     for file in filenames_list:
@@ -557,7 +557,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.2-rc1")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.2")
     window.show()
 
     app.exec()

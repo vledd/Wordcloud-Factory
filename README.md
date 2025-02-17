@@ -46,13 +46,13 @@ May be needed to suppress your Anti-Virus software. *Nothing I can do with it!*
 
 ## [RECOMMENDED] 🔨 Run from sources
 
-- For every platform, please install **Python 3.10**.
-I'm not sure how other versions will perform, not yet tested.
-With 3.10 everything works smooth, if you have some library installation errors, probably you should try 3.10.
-  **I will test newer Python versions when I find the time.**
+- For any platform, please install **Python 3.10 or Python 3.13**.
+I'm not sure how other versions will perform, not tested.
+With 3.10 and 3.13 everything works smooth,
+  if you have some library installation errors, probably you should try 3.10 or 3.13.
 
 
-- Clone this repository using git (preferred) OR just by pressing `Code -> Download ZIP` in GitHub (you would have to download
+- Clone this repository using git **(preferred)** OR just by pressing `Code -> Download ZIP` in GitHub (you would have to download
 the archive again and replace files in the folder in order to update the app).
 
 ### 🪟 Macrohard Doors (Windows)
