@@ -79,7 +79,7 @@ def main_worker(file_lists, config, progress_queue):
         print("Something went wrong. You will not see this message in future releases")
         progress_queue.put(2)
     else:
-        print("What?")
+        print("Some error occurred during processing. Not critical.")
     # print("Time taken: ", time.time() - bench_sta)
     progress_queue.put(2)  # Signal process thread to close (all done)
 
@@ -462,7 +462,9 @@ if __name__ == "__main__":
                 self.ui.statusbar.showMessage("Let's hope for the best! Processing...")
 
                 # Prepare spinners to display a cute character you can spend time with while waiting for the processing
-                self.movie = qtg.QMovie(os.path.join("../spinners/", random.choice(os.listdir("../spinners/"))))
+                self.movie = qtg.QMovie(os.path.join(f"{BASE_DIR_PTH}",
+                                                     "spinners",
+                                                     random.choice(os.listdir(f"{BASE_DIR_PTH}/spinners"))))
                 self.movie.setScaledSize(qtc.QSize(256, 256))
                 self.ui.preview_lbl.setMovie(self.movie)
                 self.movie.start()
@@ -530,11 +532,20 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------------
 
+    mp.freeze_support()  # Required for PyInstaller
+
+    # Get correct base folder depending on where application is running
+    if getattr(sys, 'frozen', False):
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        BASE_DIR_PTH = sys._MEIPASS
+    else:
+        BASE_DIR_PTH = os.path.dirname(os.path.abspath(f"{__file__}/.."))
+
     app = qtw.QApplication([])
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.0")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.1")
     window.show()
 
     app.exec()
