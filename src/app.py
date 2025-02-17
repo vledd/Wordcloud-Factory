@@ -29,39 +29,47 @@ from PySide6 import QtWidgets as qtw
 import time
 
 
-def frame_worker(filename, config, progress_queue):
-    print(f"Worker {mp.current_process().pid} is processing {filename}")
-    # TODO allow skipped frames due to incorrect mask. At the end show skipped frames amount!
-    mask_data = numpy.array(Image.open(filename))
-    image_colors = ImageColorGenerator(mask_data)
-    mask_numpy = mask_data.copy()
-    mask_numpy = process_mask_colors(config["masking_strategy"], mask_numpy)
+def frame_worker(filenames_list, config, progress_queue):
+    print(f"Worker {mp.current_process().pid} is processing {filenames_list}")
 
-    wc = WordCloud(stopwords=config["stopwords"],
-                   background_color=config["bg_color"],
-                   max_words=config["max_words"],
-                   colormap=config["colormap"],
-                   scale=config["scale"],
-                   mode=config["mode"],
-                   mask=mask_numpy,
-                   min_font_size=config["min_font_size"],
-                   max_font_size=config["max_font_size"],
-                   font_step=config["font_step"],
-                   contour_color=config["contour_color"],
-                   contour_width=config["contour_width"],
-                   )
+    """
+    Behavior is changed since v0.7.2 because Windows sucks hard at rapid process creation.
+    Previous idea "1 frame -- 1 process" worked fine only for Linux with its godlike fork().
+    Win users must still struggle (ca. 2x slower than Linux).
+    """
 
-    wc.generate(" ".join(config["words_list"]))
+    for file in filenames_list:
+        # TODO allow skipped frames due to incorrect mask. At the end show skipped frames amount!
+        mask_data = numpy.array(Image.open(file))
+        image_colors = ImageColorGenerator(mask_data)
+        mask_numpy = mask_data.copy()
+        mask_numpy = process_mask_colors(config["masking_strategy"], mask_numpy)
 
-    # Only recolor when needed
-    if config["need_recolor"]:
-        wc.recolor(color_func=image_colors)
+        wc = WordCloud(stopwords=config["stopwords"],
+                       background_color=config["bg_color"],
+                       max_words=config["max_words"],
+                       colormap=config["colormap"],
+                       scale=config["scale"],
+                       mode=config["mode"],
+                       mask=mask_numpy,
+                       min_font_size=config["min_font_size"],
+                       max_font_size=config["max_font_size"],
+                       font_step=config["font_step"],
+                       contour_color=config["contour_color"],
+                       contour_width=config["contour_width"],
+                       )
 
-    img = wc.to_image()
-    # FIXME It is temporary, I will fix it later. Want to make it more flexible
-    img.save(os.path.join(config["save_dir"], f"{filename[filename.rfind('/') + 1 ::]}"))
+        wc.generate(" ".join(config["words_list"]))
 
-    progress_queue.put(1)  # Notify progress
+        # Only recolor when needed
+        if config["need_recolor"]:
+            wc.recolor(color_func=image_colors)
+
+        img = wc.to_image()
+        # FIXME It is temporary, I will fix it later. Want to make it more flexible
+        img.save(os.path.join(config["save_dir"], f"{file[file.rfind('/') + 1 ::]}"))
+
+        progress_queue.put(1)  # Notify progress
 
 
 def main_worker(file_lists, config, progress_queue):
@@ -175,6 +183,7 @@ if __name__ == "__main__":
             self.worker_process = None
             self.observing_thread = None
             self.frames_save_path = None
+            self.split_job = None
             self.movie = None  # Hehe m00viez
 
             # Main path + misc.
@@ -294,6 +303,8 @@ if __name__ == "__main__":
                 self.mask_path = None  # This is needed in order to not break logic
                 self.ui.use_mask_chkbox.setEnabled(False)
                 self.ui.use_mask_chkbox.setChecked(False)
+                self.ui.use_mask_colors_chk.setEnabled(False)
+                self.ui.use_mask_colors_chk.setChecked(False)
                 self.ui.generate_vid_btn.setEnabled(False)
             else:
                 self.ui.path_mask_edit.setText(str(self.mask_path))
@@ -322,6 +333,10 @@ if __name__ == "__main__":
                 self.ui.save_btn.setEnabled(True)
                 self.ui.generate_vid_btn.setEnabled(True)
 
+        @staticmethod
+        def split_list_to_jobs(jobs_list: list[str], jobs_num: int):
+            for i in range(0, jobs_num):
+                yield jobs_list[i::jobs_num]
 
         def generate_wordcloud(self, is_video: bool):
             # -----------------------------------------------------
@@ -431,6 +446,9 @@ if __name__ == "__main__":
                     qtw.QApplication.beep()
                     return
 
+                # Split jobs to multiprocess them
+                self.split_job = list(self.split_list_to_jobs(self.mask_path, (mp.cpu_count() - 1)))
+
                 # Manager for storing config between the processes (wordcloud parameters)
                 self.manager = mp.Manager()
 
@@ -482,16 +500,10 @@ if __name__ == "__main__":
 
                 # Start main worker process (brigadier)
                 self.worker_process = mp.Process(target=main_worker,
-                                                 args=(self.mask_path,
+                                                 args=(self.split_job,
                                                        self.cfg_dict,
                                                        self.progress_queue))
                 self.worker_process.start()
-
-
-        @staticmethod
-        def split_list_to_jobs(jobs_list: list[str], jobs_num: int):
-            for i in range(0, jobs_num):
-                yield jobs_list[i::jobs_num]
 
 
         def pick_bg_color(self):
@@ -545,7 +557,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.1")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.2")
     window.show()
 
     app.exec()
