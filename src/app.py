@@ -87,7 +87,7 @@ def main_worker(file_lists, config, progress_queue):
         print("Something went wrong. You will not see this message in future releases")
         progress_queue.put(2)
     else:
-        print("Some error occurred during processing. Not critical.")
+        print("No errors occurred.")
     # print("Time taken: ", time.time() - bench_sta)
     progress_queue.put(2)  # Signal process thread to close (all done)
 
