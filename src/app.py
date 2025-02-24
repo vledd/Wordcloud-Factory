@@ -52,6 +52,7 @@ def frame_worker(filenames_list, config, progress_queue):
                        scale=config["scale"],
                        mode=config["mode"],
                        mask=mask_numpy,
+                       font_path=config["font_path"],
                        min_font_size=config["min_font_size"],
                        max_font_size=config["max_font_size"],
                        font_step=config["font_step"],
@@ -77,18 +78,20 @@ def main_worker(file_lists, config, progress_queue):
     # print(file_lists)
     # print(config)
     # print([(sublist, config, progress_queue) for sublist in file_lists])
-    # Performance tesitng
-    # bench_sta = time.time()
+
     # TODO would be also nice to have STOP GENERATING functionality. Need to think about it
     try:
         with mp.Pool(processes=mp.cpu_count() - 1) as pool:
             pool.starmap(frame_worker, [(job, config, progress_queue) for job in file_lists])
-    except ValueError:  # TODO Skipped frames count should appear somewhere here or inside actual job
-        print("Something went wrong. You will not see this message in future releases")
+    except ValueError as e:  # TODO Skipped frames count should appear somewhere here or inside actual job
+        print("Something went wrong. Most probably frame is all masked out!\n"
+              "Consider changing mask settings.")
+        print("Full trace:")
+        print(e)
         progress_queue.put(2)
     else:
-        print("Some error occurred during processing. Not critical.")
-    # print("Time taken: ", time.time() - bench_sta)
+        print("No errors occurred.")
+
     progress_queue.put(2)  # Signal process thread to close (all done)
 
 
@@ -130,6 +133,7 @@ if __name__ == "__main__":
 
         # Called automatically on start() method
         def run(self):
+            self.queue_signal.emit(0)  # Signal beginning
             while self.__running:
                 # Read if there is something new in queue
                 ret: int = self.__progress_queue.get()
@@ -185,11 +189,13 @@ if __name__ == "__main__":
             self.frames_save_path = None
             self.split_job = None
             self.movie = None  # Hehe m00viez
+            self.benchmark_start_time = 0.0 # To keep track how long the processing takes
 
             # Main path + misc.
             self.txt_path = None
             self.stopwords_path = None
             self.mask_path = None
+            self.font_path = None
             self.wordcloud_image = None
             self.wordcloud_image_qt = None
             # Those below are mostly to prevent stylechecker yapping (what is bro yappin' 'bout?)
@@ -220,12 +226,14 @@ if __name__ == "__main__":
             self.ui.path_json_btn.clicked.connect(self.get_text_file_path)
             self.ui.path_stop_btn.clicked.connect(self.get_stopwords_path)
             self.ui.path_mask_btn.clicked.connect(self.get_mask_path)
+            self.ui.path_font_btn.clicked.connect(self.get_font_path)
             self.ui.generate_btn.clicked.connect(lambda: self.generate_wordcloud(False))
             self.ui.generate_vid_btn.clicked.connect(lambda: self.generate_wordcloud(True))
             self.ui.use_mask_chkbox.clicked.connect(self.use_mask_clicked)
             self.ui.save_btn.clicked.connect(self.save_wordcloud)
             self.ui.bg_color_pick_btn.clicked.connect(self.pick_bg_color)
             self.ui.mask_color_pick_btn.clicked.connect(self.pick_mask_color)
+            self.ui.use_mask_colors_chk.clicked.connect(self.use_mask_colors_clicked)
 
         def use_mask_clicked(self):
             if self.ui.use_mask_chkbox.isChecked():
@@ -236,9 +244,17 @@ if __name__ == "__main__":
                 self.ui.img_height_spin.setEnabled(False)
             else:
                 self.ui.use_mask_colors_chk.setEnabled(False)
+                self.ui.use_mask_colors_chk.setChecked(False)  # Uncheck it to release color map combo box if disabled
+                self.use_mask_colors_clicked()  # Lock or unlock color map combo box
                 self.ui.color_to_mask_combo.setEnabled(False)
                 self.ui.img_width_spin.setEnabled(True)
                 self.ui.img_height_spin.setEnabled(True)
+
+        def use_mask_colors_clicked(self):
+            if self.ui.use_mask_colors_chk.isChecked():
+                self.ui.color_map_combo.setEnabled(False)
+            else:
+                self.ui.color_map_combo.setEnabled(True)
 
         def get_text_file_path(self):
             """
@@ -306,6 +322,8 @@ if __name__ == "__main__":
                 self.ui.use_mask_colors_chk.setEnabled(False)
                 self.ui.use_mask_colors_chk.setChecked(False)
                 self.ui.generate_vid_btn.setEnabled(False)
+                self.use_mask_clicked()
+                self.use_mask_colors_clicked()
             else:
                 self.ui.path_mask_edit.setText(str(self.mask_path))
                 self.ui.statusbar.showMessage("Mask load OK")
@@ -315,23 +333,44 @@ if __name__ == "__main__":
                 if self.ui.generate_btn.isEnabled():
                     self.ui.generate_vid_btn.setEnabled(True)
 
+        def get_font_path(self):
+            """
+            Open file dialog to get a path for a font (OTF or TTF).
+            :return: None
+            """
+            self.font_path = qtw.QFileDialog.getOpenFileName(self,
+                                                            "Select Font File",
+                                                             filter="TrueType font (*.ttf);;"
+                                                                    "OpenType font (*.otf)")[0]
+            if len(self.font_path) == 0:
+                self.ui.path_font_edit.setText("No valid font provided!")
+                self.ui.statusbar.showMessage("Failed to load font...")
+                self.font_path = None
+            else:
+                self.ui.path_font_edit.setText(str(self.font_path))
+                self.ui.statusbar.showMessage("Font load OK")
+
+
         def process_queue_updates(self, update_signal: int):
             """
             This is a wrapper for correct multithreaded GUI repaint
             :return:
             """
-            if update_signal == 1:
+            if update_signal == 0:
+                self.benchmark_start_time = time.time()
+            elif update_signal == 1:
                 self.ui.progressBar.setValue(self.ui.progressBar.value() + 1)
             else:
                 # Stop the fun :(
                 self.movie.stop()
                 self.ui.preview_lbl.setText("*Please generate a Wordcloud to see preview*")
-                self.ui.statusbar.showMessage("Done!")
+                self.ui.statusbar.showMessage(f"Done! In {time.time() - self.benchmark_start_time} seconds!")
 
                 # Enable buttons
                 self.ui.generate_btn.setEnabled(True)
                 self.ui.save_btn.setEnabled(True)
                 self.ui.generate_vid_btn.setEnabled(True)
+
 
         @staticmethod
         def split_list_to_jobs(jobs_list: list[str], jobs_num: int):
@@ -418,6 +457,7 @@ if __name__ == "__main__":
                                scale=float(self.ui.scaling_spin.text().replace(',', '.')),
                                mode=self.ui.color_mode_combo.currentText(),
                                mask=mask_numpy,
+                               font_path=self.font_path,
                                min_font_size=int(self.ui.min_font_size_spin.text()),
                                max_font_size=self.max_font_size,
                                font_step=int(self.ui.font_step_spin.text()),
@@ -459,6 +499,7 @@ if __name__ == "__main__":
                     "colormap": self.ui.color_map_combo.currentText(),
                     "scale": float(self.ui.scaling_spin.text().replace(',', '.')),
                     "mode": self.ui.color_mode_combo.currentText(),
+                    "font_path": self.font_path,
                     "min_font_size": int(self.ui.min_font_size_spin.text()),
                     "max_font_size": self.max_font_size,
                     "font_step": int(self.ui.font_step_spin.text()),
@@ -557,7 +598,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     window = MainScreenWindow()
-    window.setWindowTitle("Wordcloud Factory PySide6 v0.7.2")
+    window.setWindowTitle("Wordcloud Factory PySide6 v0.8.0")
     window.show()
 
     app.exec()
